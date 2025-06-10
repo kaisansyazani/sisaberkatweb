@@ -10,10 +10,15 @@ RUN apt-get update && apt-get install -y \
     zip \
     libpng-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    zlib1g-dev \
+    libzip-dev  # Required for zip extension
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath
+
+# Optional: Install zip extension if needed
+RUN docker-php-ext-install zip
 
 # Set working directory
 WORKDIR /var/www/html
