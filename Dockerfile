@@ -1,29 +1,43 @@
-# Use official PHP image with Apache
 FROM php:8.2-apache
 
-# Enable mod_rewrite for Laravel's pretty URLs
+# Enable mod_rewrite
 RUN a2enmod rewrite headers expires alias mime
 
-# Install required PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mysqli opcache
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    zip \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy local files
+# Copy files
 COPY . .
+
+# Allow Composer to run as root (inside container)
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Set higher memory limit for Composer
+ENV COMPOSER_MEMORY_LIMIT=2G
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer  | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install dependencies
+# Run Composer Install
 RUN composer install --no-dev --optimize-autoloader
 
 # Generate key
 RUN cp .env.example .env && php artisan key:generate
 
-# Run migrations (optional, can also be done manually later)
-RUN php artisan migrate --force
+# Clear caches (optional)
+RUN php artisan config:clear && php artisan route:clear && php artisan view:clear
 
 # Expose port and start Apache
 EXPOSE 80
