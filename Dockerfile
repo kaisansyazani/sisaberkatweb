@@ -13,13 +13,12 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zlib1g-dev \
-    libzip-dev
+    libzip-dev \
+    libpq-dev # Required for PostgreSQL
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath
-
-# Optional: Install zip extension
-RUN docker-php-ext-install zip
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath zip \
+    && docker-php-ext-install pdo_pgsql pgsql # <-- Add these for PostgreSQL support
 
 # Set Apache document root to /var/www/html/public
 RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
@@ -42,7 +41,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=2G
 
 # Install Composer
-RUN curl -sS https://getcomposer.org/installer  | php -- --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Run Composer Install
 RUN composer install --no-dev --optimize-autoloader
